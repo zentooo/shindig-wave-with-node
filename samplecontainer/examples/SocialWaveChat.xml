@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+ <ModulePrefs title="Social Wave Canvas">
+   <Require feature="osapi"/>
+   <Require feature="wave"/>
+   <Require feature="settitle"/>
+   <Require feature="dynamic-height"/>
+ </ModulePrefs>
+ <Content type="html">
+   <![CDATA[
+   <style type="text/css">
+     #canvas1 {
+       border: 1px black solid;
+     }
+   </style>
+
+   <canvas id="canvas1" width="825" height="825"></canvas>
+
+   <script type="text/javascript">
+
+     var canvas,
+         ctx,
+         state,
+         buffer = [],
+         buflen = 25,
+         size = 8,
+         drawOn = false;
+
+     function draw(e) {
+       if ( drawOn ) {
+        ctx.fillStyle = "rgba(255,0,0,1)";
+        ctx.fillRect(e.clientX, e.clientY, size, size);
+
+        if ( buffer.length === buflen ) {
+          state = wave.getState();
+          state.submitValue("positions", buffer);
+          buffer = [];
+        }
+        else {
+          buffer.push( { x: e.clientX, y: e.clientY } );
+        }
+       }
+     }
+
+     function init() {
+       canvas = document.getElementById("canvas1");
+       ctx = canvas.getContext("2d");
+
+       canvas.addEventListener("mousemove", draw, true);
+       canvas.addEventListener("mousedown", function() {
+         drawOn = true;
+       }, false);
+       canvas.addEventListener("mouseup", function() {
+         drawOn = false;
+       }, false);
+
+       wave.setStateCallback(function(state, delta) {
+
+         if ( delta.positions !== void(0) && delta.positions.constructor === Array ) {
+           var i = 0, iz = delta.positions.length;
+           ctx.fillStyle = "rgba(0,0,255,1)";
+
+           for (; i < iz; ++i) {
+             ctx.fillRect(delta.positions[i].x, delta.positions[i].y, size, size);
+           }
+         }
+       });
+
+       gadgets.window.adjustHeight(900);
+     }
+
+     gadgets.util.registerOnLoadHandler(init);
+   </script>
+  ]]>
+  </Content>
+</Module>

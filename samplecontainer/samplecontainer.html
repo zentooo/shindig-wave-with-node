@@ -1,0 +1,121 @@
+<!--
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+-->
+<html>
+<head>
+<title>Gadget testing container</title>
+<link rel="stylesheet" href="../container/gadgets.css">
+<style type="text/css">
+  body {
+    font-family: arial, sans-serif;
+  }
+
+  #headerDiv {
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #e5ecf9;
+    color: #3366cc;
+    font-size: larger;
+    font-weight: bold;
+  }
+
+  .subTitle {
+    font-size: smaller;
+    float: right;
+  }
+
+  .gadgets-gadget-chrome {
+    width: 100%;
+    float: none;
+    margin: auto;
+  }
+
+  .gadgets-gadget {
+    width: 100%;
+  }
+
+</style>
+
+<script type="text/javascript" src="/gadgets/js/core:rpc:pubsub:shindig-container.js?c=1&debug=1"></script>
+<script type="text/javascript" src="http://localhost:9000/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="samplecontainer.js"></script>
+
+<script type="text/javascript">
+  var socket = new io.Socket("localhost", { port: 9000 });
+
+  function initRpcs() {
+    gadgets.rpc.register("wave_gadget_state", function(data) {
+      socket.send( { type: "gadget_state", content: data } );
+    });
+    gadgets.rpc.register("wave_private_gadget_state", function(data) {
+      socket.send( { type: "private_gadget_state", content: data } );
+    });
+  }
+
+  function initSocket(version) {
+    var frameId = "remote_iframe_0";
+
+    socket.on('message', function(data) {
+      gadgets.rpc.call(frameId, "wave_" + data.type, null, data.content);
+    });
+
+    socket.connect();
+  }
+
+  gadgets.rpc.register('wave_enable', initSocket);
+  initRpcs();
+</script>
+
+</head>
+<body onLoad="shindig.samplecontainer.initSampleContainer();
+    shindig.samplecontainer.unpackFormState(); shindig.samplecontainer.initGadget();">
+  <div id="headerDiv">
+    <div style="float:left">Gadget testing container</div>
+    <div class="subTitle">
+      Displaying gadget: <input type="text" size="75" id="gadgetUrl"/>
+      <input type="checkbox" id="useCacheCheckbox" checked="true"
+       /><label for="useCacheCheckbox">use cache</label>
+      <input type="checkbox" id="useCajaCheckbox"
+       /><label for="useCajaCheckbox">use caja</label>
+      <input type="checkbox" id="useDebugCheckbox"
+       /><label for="useDebugCheckbox">use debug</label>
+
+      <br/>
+
+      Using state: <input type="text" size="75" id="stateFileUrl"/>
+      <input type="checkbox" id="doEvilCheckbox"
+       /><label for="doEvilCheckbox">do evil</label>
+
+      <br/>
+      <br/>
+      Viewer id: <input type="text" size="20" id="viewerId"/>
+      Owner id: <input type="text" size="20" id="ownerId"/>
+
+      <br/>
+
+      <input type="button" value="reset all" onclick="shindig.samplecontainer.changeGadgetUrl();"/>
+      <input type="button" value="dump state" onclick="shindig.samplecontainer.dumpStateFile();"/>
+      <input type="button" value="Send Hello" onclick="shindig.samplecontainer.sendHello();"/>
+    </div>
+    <div style="clear:both; height: 1px;">&nbsp;</div>
+  </div>
+
+  <div id="gadgetState" style="font-size:smaller"></div>
+  <div id="gadget-chrome" class="gadgets-gadget-chrome"></div>
+</body>
+</html>
